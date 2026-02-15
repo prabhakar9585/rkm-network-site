@@ -11,88 +11,166 @@
     <h1>Admin Dashboard</h1>
 </header>
 
+<!-- TABS -->
 <div class="tabs">
-    <button onclick="showTab('pending')">Pending</button>
-    <button onclick="showTab('resolved')">Resolved</button>
-    <button onclick="showTab('applications')">Applications</button>
+    <button id="pendingBtn" onclick="switchTab('pending')">Pending (0)</button>
+    <button id="resolvedBtn" onclick="switchTab('resolved')">Resolved (0)</button>
+    <button id="applicationsBtn" onclick="switchTab('applications')">Applications (0)</button>
 </div>
 
 <div class="dashboard">
-    <div class="list-container" id="list"></div>
-    <div class="detail-container" id="detail"></div>
+
+    <!-- LEFT SIDE LIST -->
+    <div class="list-container" id="listContainer">
+        <!-- Items appear here -->
+    </div>
+
+    <!-- RIGHT SIDE DETAILS -->
+    <div class="detail-container" id="detailContainer">
+        <p>Select any item to view details</p>
+    </div>
+
 </div>
 
 <script type="module">
+
 import { db } from "./firebase-init.js";
-import { collection, query, where, onSnapshot, doc, updateDoc }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import {
+    collection,
+    query,
+    where,
+    onSnapshot,
+    doc,
+    updateDoc
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 let currentTab = "pending";
 
-window.showTab = function(tab){
+window.switchTab = function(tab){
     currentTab = tab;
     loadData();
 };
 
 function loadData(){
-    let col = currentTab === "applications" ? "applications" : "faults";
-    const list = document.getElementById("list");
-    const detail = document.getElementById("detail");
+
+    const list = document.getElementById("listContainer");
+    const detail = document.getElementById("detailContainer");
+
     list.innerHTML = "";
-    detail.innerHTML = "";
+    detail.innerHTML = "<p>Select any item to view details</p>";
 
-    let q = collection(db, col);
+    let ref;
 
-    if(currentTab !== "applications"){
-        q = query(q, where("status","==",currentTab));
+    if(currentTab === "applications"){
+        ref = collection(db, "applications");
+    } else {
+        ref = query(
+            collection(db, "faults"),
+            where("status", "==", currentTab)
+        );
     }
 
-    onSnapshot(q, snapshot=>{
-        list.innerHTML="";
-        snapshot.forEach(docSnap=>{
+    onSnapshot(ref, snapshot => {
+
+        list.innerHTML = "";
+
+        // Update counts
+        if(currentTab === "pending"){
+            pendingBtn.innerText = `Pending (${snapshot.size})`;
+        }
+        if(currentTab === "resolved"){
+            resolvedBtn.innerText = `Resolved (${snapshot.size})`;
+        }
+        if(currentTab === "applications"){
+            applicationsBtn.innerText = `Applications (${snapshot.size})`;
+        }
+
+        snapshot.forEach(docSnap => {
+
             const data = docSnap.data();
-            const div = document.createElement("div");
-            div.className="item-card";
 
-            div.innerHTML = currentTab==="applications"
-                ? `<strong>${data.fullName}</strong>`
-                : `<strong>${data.custname}</strong>`;
+            const card = document.createElement("div");
+            card.className = "item-card";
 
-            div.onclick = ()=>{
-                if(currentTab==="applications"){
-                    detail.innerHTML = `
-                        <h3>${data.fullName}</h3>
-                        <p>Mobile: ${data.mobile}</p>
-                        <p>Aadhaar: ${data.aadhaar}</p>
-                        <p>Address: ${data.address}</p>
-                    `;
-                } else {
-                    detail.innerHTML = `
-                        <h3>${data.custname}</h3>
-                        <p>Landline: ${data.landline}</p>
-                        <p>Fault: ${data.faultType}</p>
-                        <p>Location: ${data.location}</p>
-                        <textarea id="solution"></textarea>
-                        <button onclick="resolve('${docSnap.id}')">Resolve</button>
-                    `;
-                }
-            };
+            // SAFETY CHECK TO AVOID undefined
+            if(currentTab === "applications"){
+                card.innerHTML = `<strong>${data.fullName || "No Name"}</strong>`;
+            } else {
+                card.innerHTML = `<strong>${data.custname || "No Name"}</strong>`;
+            }
 
-            list.appendChild(div);
+            card.onclick = () => showDetails(data, docSnap.id);
+
+            list.appendChild(card);
+
         });
+
     });
 }
 
-window.resolve = async function(id){
-    const solution = document.getElementById("solution").value;
-    await updateDoc(doc(db,"faults",id),{
-        status:"resolved",
-        solution:solution
+function showDetails(data, id){
+
+    const detail = document.getElementById("detailContainer");
+
+    if(currentTab === "applications"){
+
+        detail.innerHTML = `
+            <h3>${data.fullName || ""}</h3>
+            <p><strong>Mobile:</strong> ${data.mobile || ""}</p>
+            <p><strong>Aadhaar:</strong> ${data.aadhaar || ""}</p>
+            <p><strong>Address:</strong> ${data.address || ""}</p>
+        `;
+
+    }
+
+    if(currentTab === "pending"){
+
+        detail.innerHTML = `
+            <h3>${data.custname || ""}</h3>
+            <p><strong>Landline:</strong> ${data.landline || ""}</p>
+            <p><strong>Fault:</strong> ${data.faultType || ""}</p>
+            <p><strong>Location:</strong> ${data.location || ""}</p>
+
+            <textarea id="solutionBox" placeholder="Write solution here"></textarea>
+            <button onclick="resolveFault('${id}')">Resolve</button>
+        `;
+
+    }
+
+    if(currentTab === "resolved"){
+
+        detail.innerHTML = `
+            <h3>${data.custname || ""}</h3>
+            <p><strong>Landline:</strong> ${data.landline || ""}</p>
+            <p><strong>Fault:</strong> ${data.faultType || ""}</p>
+            <p><strong>Location:</strong> ${data.location || ""}</p>
+            <p><strong>Solution:</strong> ${data.solution || "Not Updated"}</p>
+        `;
+
+    }
+
+}
+
+window.resolveFault = async function(id){
+
+    const solution = document.getElementById("solutionBox").value;
+
+    if(!solution){
+        alert("Enter solution first");
+        return;
+    }
+
+    await updateDoc(doc(db, "faults", id), {
+        status: "resolved",
+        solution: solution
     });
-    alert("Resolved");
+
+    alert("Fault Resolved Successfully");
+
 };
 
 loadData();
+
 </script>
 
 </body>

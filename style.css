@@ -184,3 +184,38 @@ button {
   padding: 20px;
   border-radius: 8px;
 }
+.tabs button{
+    width:30%;
+    padding:12px;
+    font-weight:bold;
+    border:none;
+    cursor:pointer;
+    border-radius:6px;
+}
+
+#pendingBtn{
+    background:#ff9800;
+    color:white;
+}
+
+#resolvedBtn{
+    background:#4caf50;
+    color:white;
+}
+
+#applicationsBtn{
+    background:#3f51b5;
+    color:white;
+}
+
+.item-card{
+    background:white;
+    padding:15px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.item-card:hover{
+    background:#e3f2fd;
+}
