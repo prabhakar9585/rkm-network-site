@@ -1,125 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .tabs{display:flex;gap:15px;margin:20px}
-    .tab{flex:1;padding:15px;color:#fff;text-align:center;
-    border-radius:8px;cursor:pointer;font-weight:bold}
-    .pending{background:#ff9800}
-    .resolved{background:#4caf50}
-    .applications{background:#3f51b5}
-    .container{display:flex;gap:20px;padding:20px}
-    .list{width:40%}
-    .details{width:60%}
-    .card{background:#fff;padding:15px;
-    margin-bottom:15px;border-radius:8px;
-    cursor:pointer}
-  </style>
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="firebase-init.js"></script>
 </head>
 <body>
 
-<header>Admin Dashboard</header>
+<header>
+    <h1>Admin Login</h1>
+</header>
 
-<div class="tabs">
-  <div class="tab pending" onclick="loadPending()">Pending (<span id="pendingCount">0</span>)</div>
-  <div class="tab resolved" onclick="loadResolved()">Resolved (<span id="resolvedCount">0</span>)</div>
-  <div class="tab applications" onclick="loadApplications()">Applications</div>
-</div>
-
-<div class="container">
-  <div class="list" id="list"></div>
-  <div class="details" id="details"></div>
+<div class="login-box">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
 </div>
 
 <script type="module">
-import { db } from "./firebase-init.js";
-import { collection, getDocs, query, where,
-updateDoc, doc }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { auth } from "./firebase-init.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-const list=document.getElementById("list");
-const details=document.getElementById("details");
-
-window.loadPending=async function(){
-  const q=query(collection(db,"faults"),
-  where("status","==","pending"));
-  const snap=await getDocs(q);
-  pendingCount.innerText=snap.size;
-  list.innerHTML="";details.innerHTML="";
-  snap.forEach(d=>{
-    const data=d.data();
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`<b>${data.name}</b><br>${data.phone}`;
-    div.onclick=()=>showPending(d.id,data);
-    list.appendChild(div);
-  });
-}
-
-function showPending(id,data){
-  details.innerHTML=`
-  <h3>${data.name}</h3>
-  <p>${data.phone}</p>
-  <p>${data.complaint}</p>
-  <textarea id="solution"></textarea><br><br>
-  <button onclick="resolveFault('${id}')">Resolve</button>
-  `;
-}
-
-window.resolveFault=async function(id){
-  const sol=document.getElementById("solution").value;
-  await updateDoc(doc(db,"faults",id),
-  {status:"resolved",solution:sol});
-  loadPending();
-  loadResolved();
-}
-
-window.loadResolved=async function(){
-  const q=query(collection(db,"faults"),
-  where("status","==","resolved"));
-  const snap=await getDocs(q);
-  resolvedCount.innerText=snap.size;
-  list.innerHTML="";details.innerHTML="";
-  snap.forEach(d=>{
-    const data=d.data();
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`<b>${data.name}</b>`;
-    div.onclick=()=>{
-      details.innerHTML=`
-      <h3>${data.name}</h3>
-      <p>${data.phone}</p>
-      <p>${data.complaint}</p>
-      <p><b>Solution:</b> ${data.solution}</p>
-      `;
+window.login = async function(){
+    try{
+        await signInWithEmailAndPassword(auth, email.value, password.value);
+        window.location.href = "dashboard.html";
+    }catch(err){
+        alert("Login Failed");
     }
-    list.appendChild(div);
-  });
-}
-
-window.loadApplications=async function(){
-  const snap=await getDocs(collection(db,"applications"));
-  list.innerHTML="";details.innerHTML="";
-  snap.forEach(d=>{
-    const data=d.data();
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`<b>${data.fullName}</b>`;
-    div.onclick=()=>{
-      details.innerHTML=`
-      <h3>${data.fullName}</h3>
-      <p>Mobile: ${data.mobile}</p>
-      <p>Alternate: ${data.alternate}</p>
-      <p>Address: ${data.address}</p>
-      `;
-    }
-    list.appendChild(div);
-  });
-}
-
-loadPending();
+};
 </script>
 
 </body>
