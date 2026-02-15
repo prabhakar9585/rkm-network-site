@@ -10,9 +10,9 @@
 .resolved{ background:green;}
 .application{ background:blue;}
 .container{ display:flex; gap:20px; padding:20px;}
-.list{ width:40%;}
+.list{ width:40%; display:flex; flex-direction:column; }
 .details{ width:60%; background:white; padding:20px; border-radius:8px;}
-.card{ background:white; padding:10px; margin-bottom:10px; cursor:pointer;}
+.card{ background:white; padding:10px; margin-bottom:10px; cursor:pointer; border-radius:6px; box-shadow:0 0 6px rgba(0,0,0,0.1);}
 </style>
 </head>
 <body>
@@ -20,7 +20,7 @@
 <div class="tabs">
   <div class="tab pending" id="pendingTab">Pending Faults (0)</div>
   <div class="tab resolved" id="resolvedTab">Resolved Faults (0)</div>
-  <div class="tab application" id="appTab">New Applications</div>
+  <div class="tab application" id="appTab">New Applications (0)</div>
 </div>
 
 <div class="container">
@@ -42,72 +42,148 @@ import {
 const list = document.getElementById("list");
 const details = document.getElementById("details");
 
+/* =========================
+   LOAD PENDING FAULTS
+========================= */
 async function loadPending(){
   list.innerHTML="";
+  details.innerHTML="Select item to view details";
+
   const q = query(collection(db,"faults"), where("status","==","pending"));
   const snap = await getDocs(q);
 
-  document.getElementById("pendingTab").innerText = "Pending Faults ("+snap.size+")";
+  document.getElementById("pendingTab").innerText =
+    "Pending Faults ("+snap.size+")";
 
   snap.forEach(d=>{
     const data = d.data();
+
     const div = document.createElement("div");
     div.className="card";
-    div.innerText = data.name + " - " + data.phone;
+    div.innerHTML = `
+      <strong>${data.name || "No Name"}</strong><br>
+      ${data.landline || data.phone || ""}
+    `;
+
     div.onclick = ()=>{
       details.innerHTML = `
         <h3>${data.name}</h3>
-        <p>Phone: ${data.phone}</p>
-        <p>Complaint: ${data.complaint}</p>
+        <p><b>Landline:</b> ${data.landline || ""}</p>
+        <p><b>Fault Type:</b> ${data.faultType || ""}</p>
+        <p><b>Location:</b> ${data.location || ""}</p>
         <textarea id="solution" placeholder="Write resolution"></textarea><br><br>
         <button onclick="resolve('${d.id}')">Mark Resolved</button>
       `;
     };
+
     list.appendChild(div);
   });
 }
 
+/* =========================
+   RESOLVE FUNCTION
+========================= */
 window.resolve = async function(id){
   const solution = document.getElementById("solution").value;
+
+  if(!solution){
+    alert("Please write resolution");
+    return;
+  }
+
   await updateDoc(doc(db,"faults",id),{
     status:"resolved",
     solution:solution
   });
+
+  alert("Fault Resolved Successfully");
+
   loadPending();
   loadResolved();
   details.innerHTML="Resolved Successfully";
 }
 
+/* =========================
+   LOAD RESOLVED FAULTS
+========================= */
 async function loadResolved(){
+  list.innerHTML="";
+  details.innerHTML="Select item to view details";
+
   const q = query(collection(db,"faults"), where("status","==","resolved"));
   const snap = await getDocs(q);
-  document.getElementById("resolvedTab").innerText="Resolved Faults ("+snap.size+")";
-}
 
-async function loadApplications(){
-  list.innerHTML="";
-  const snap = await getDocs(collection(db,"applications"));
+  document.getElementById("resolvedTab").innerText =
+    "Resolved Faults ("+snap.size+")";
+
   snap.forEach(d=>{
     const data = d.data();
+
     const div = document.createElement("div");
     div.className="card";
-    div.innerText = data.name + " - " + data.phone;
+    div.innerHTML = `
+      <strong>${data.name || ""}</strong><br>
+      ${data.landline || ""}
+    `;
+
     div.onclick=()=>{
       details.innerHTML = `
         <h3>${data.name}</h3>
-        <p>Phone: ${data.phone}</p>
-        <p>Address: ${data.address}</p>
-        <p>Area: ${data.area}</p>
+        <p><b>Landline:</b> ${data.landline}</p>
+        <p><b>Fault:</b> ${data.faultType}</p>
+        <p><b>Location:</b> ${data.location}</p>
+        <p><b>Resolution:</b> ${data.solution}</p>
       `;
     };
+
     list.appendChild(div);
   });
 }
 
+/* =========================
+   LOAD APPLICATIONS
+========================= */
+async function loadApplications(){
+  list.innerHTML="";
+  details.innerHTML="Select item to view details";
+
+  const snap = await getDocs(collection(db,"applications"));
+
+  document.getElementById("appTab").innerText =
+    "New Applications ("+snap.size+")";
+
+  snap.forEach(d=>{
+    const data = d.data();
+
+    const div = document.createElement("div");
+    div.className="card";
+    div.innerHTML = `
+      <strong>${data.fullName || data.name || ""}</strong><br>
+      ${data.mobile || data.phone || ""}
+    `;
+
+    div.onclick=()=>{
+      details.innerHTML = `
+        <h3>${data.fullName || data.name}</h3>
+        <p><b>Mobile:</b> ${data.mobile}</p>
+        <p><b>Alternate:</b> ${data.altMobile || ""}</p>
+        <p><b>Address:</b> ${data.address}</p>
+        <p><b>Area:</b> ${data.area || ""}</p>
+      `;
+    };
+
+    list.appendChild(div);
+  });
+}
+
+/* =========================
+   TAB EVENTS
+========================= */
 document.getElementById("pendingTab").onclick=loadPending;
 document.getElementById("resolvedTab").onclick=loadResolved;
 document.getElementById("appTab").onclick=loadApplications;
 
+/* Initial Load */
 loadPending();
 loadResolved();
 </script>

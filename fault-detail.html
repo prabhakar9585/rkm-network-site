@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fault Details</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>Fault Details</h1>
+</header>
+
+<div class="main-content">
+    <div class="form-box" id="detailsBox"></div>
+</div>
+
+<script type="module">
+
+import { db } from "./firebase-init.js";
+import { doc, getDoc, updateDoc }
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get("id");
+
+const snap = await getDoc(doc(db,"faults",id));
+const data = snap.data();
+
+const box = document.getElementById("detailsBox");
+
+box.innerHTML = `
+    <h3>${data.name}</h3>
+    <p><b>Landline:</b> ${data.landline}</p>
+    <p><b>Fault:</b> ${data.fault}</p>
+    <p><b>Location:</b> ${data.location}</p>
+
+    <textarea id="resolution" placeholder="What you did"></textarea>
+    <button onclick="resolve()">Resolve</button>
+`;
+
+window.resolve = async function(){
+    const text = document.getElementById("resolution").value;
+
+    await updateDoc(doc(db,"faults",id),{
+        status:"resolved",
+        resolution:text
+    });
+
+    alert("Fault Resolved");
+    window.close();
+}
+
+</script>
+
+</body>
+</html>
