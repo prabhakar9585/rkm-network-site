@@ -1,10 +1,10 @@
-<script type="module">
+// firebase-init.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR-KEY",
+  apiKey: "AIzaSyBzN-UQl7Ad2KE_fsibeXzFYZeiWviJbao",
   authDomain: "rkm-network.firebaseapp.com",
   projectId: "rkm-network",
   storageBucket: "rkm-network.firebasestorage.app",
@@ -16,4 +16,3 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-</script>
