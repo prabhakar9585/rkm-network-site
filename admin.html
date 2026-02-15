@@ -6,30 +6,30 @@
 </head>
 <body>
 
-<header>
-<h1>Admin Login</h1>
-</header>
+<header>Admin Login</header>
 
-<div class="main-content">
-<div class="form-box">
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
+<div class="login-box">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <p id="error" style="color:red;"></p>
 </div>
 
 <script type="module">
 import { auth } from "./firebase-init.js";
-import { signInWithEmailAndPassword }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-window.login = async function(){
-  try{
-    await signInWithEmailAndPassword(auth, email.value, password.value);
-    window.location.href = "dashboard.html";
-  }catch(err){
-    alert("Invalid Login");
-  }
+window.login = function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      window.location.href = "dashboard.html";
+    })
+    .catch((error) => {
+      document.getElementById("error").innerText = error.message;
+    });
 }
 </script>
 

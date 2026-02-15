@@ -1,11 +1,10 @@
-// Firebase SDK Imports
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-// Your Firebase Config
 const firebaseConfig = {
-  apiKey: "AIzaSyBzN-UQl7Ad2KE_fsibeXzFYZeiWviJbao",
+  apiKey: "YOUR-KEY",
   authDomain: "rkm-network.firebaseapp.com",
   projectId: "rkm-network",
   storageBucket: "rkm-network.firebasestorage.app",
@@ -13,9 +12,8 @@ const firebaseConfig = {
   appId: "1:986628552350:web:b6e63bafb489efb5326d8f"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Export Services
-export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const db = getFirestore(app);
+</script>

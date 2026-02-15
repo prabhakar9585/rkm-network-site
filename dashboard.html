@@ -6,70 +6,113 @@
 </head>
 <body>
 
-<header>
-<h1>Admin Dashboard</h1>
-</header>
+<header>RKM NETWORK SOLUTION - Admin Panel</header>
 
-<div class="main-content">
-<h3>Pending Faults: <span id="pendingCount">0</span></h3>
-<h3>Resolved Faults: <span id="resolvedCount">0</span></h3>
-<h3>New Applications: <span id="appCount">0</span></h3>
-
-<div id="faultList"></div>
+<div class="tabs">
+  <button class="tab pending" onclick="showPending()">Pending Faults (<span id="pendingCount">0</span>)</button>
+  <button class="tab resolved" onclick="showResolved()">Resolved Faults (<span id="resolvedCount">0</span>)</button>
+  <button class="tab applications" onclick="showApplications()">New Applications</button>
 </div>
+
+<div id="content"></div>
 
 <script type="module">
 import { db } from "./firebase-init.js";
-import { collection, getDocs, updateDoc, doc }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  onSnapshot,
+  updateDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const pendingCount = document.getElementById("pendingCount");
-const resolvedCount = document.getElementById("resolvedCount");
-const appCount = document.getElementById("appCount");
-const faultList = document.getElementById("faultList");
+// Load counts
+function loadCounts() {
+  const pendingQ = query(collection(db,"faults"), where("status","==","pending"));
+  const resolvedQ = query(collection(db,"faults"), where("status","==","resolved"));
 
-async function loadData(){
+  getDocs(pendingQ).then(s => document.getElementById("pendingCount").innerText = s.size);
+  getDocs(resolvedQ).then(s => document.getElementById("resolvedCount").innerText = s.size);
+}
+loadCounts();
 
-  const faultSnap = await getDocs(collection(db,"faults"));
-  let pending = 0;
-  let resolved = 0;
-  faultList.innerHTML="";
+// ---------------- Pending ----------------
+window.showPending = function() {
+  const q = query(collection(db,"faults"), where("status","==","pending"));
 
-  faultSnap.forEach(docSnap=>{
-    const data = docSnap.data();
-
-    if(data.status==="Pending") pending++;
-    else resolved++;
-
-    if(data.status==="Pending"){
-      faultList.innerHTML += `
-        <div style="background:white;padding:10px;margin:10px;">
-        ${data.landline} - ${data.name} - ${data.faultType}
-        <button onclick="resolve('${docSnap.id}')">Resolve</button>
-        </div>`;
-    }
+  onSnapshot(q, snapshot => {
+    let html = "";
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      html += `
+        <div class="card">
+          <h3>${data.landline}</h3>
+          <p>${data.name}</p>
+          <p>${data.faultType}</p>
+          <p>${data.location}</p>
+          <textarea id="res-${docSnap.id}" placeholder="Resolution note"></textarea>
+          <button onclick="resolveFault('${docSnap.id}')">Resolve</button>
+        </div>
+      `;
+    });
+    document.getElementById("content").innerHTML = html;
   });
-
-  pendingCount.innerText = pending;
-  resolvedCount.innerText = resolved;
-
-  const appSnap = await getDocs(collection(db,"applications"));
-  appCount.innerText = appSnap.size;
 }
 
-window.resolve = async function(id){
-  const note = prompt("Enter Resolution Note:");
-  if(!note) return;
+// Resolve
+window.resolveFault = async function(id) {
+  const note = document.getElementById("res-"+id).value;
 
-  await updateDoc(doc(db,"faults",id),{
-    status:"Resolved",
-    resolutionNote:note
+  await updateDoc(doc(db,"faults",id), {
+    status: "resolved",
+    resolutionNote: note
   });
 
-  loadData();
+  loadCounts();
 }
 
-loadData();
+// ---------------- Resolved ----------------
+window.showResolved = function() {
+  const q = query(collection(db,"faults"), where("status","==","resolved"));
+
+  onSnapshot(q, snapshot => {
+    let html = "";
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      html += `
+        <div class="card resolved-card">
+          <h3>${data.landline}</h3>
+          <p>${data.name}</p>
+          <p>${data.faultType}</p>
+          <p>${data.location}</p>
+          <p><strong>Resolved:</strong> ${data.resolutionNote}</p>
+        </div>
+      `;
+    });
+    document.getElementById("content").innerHTML = html;
+  });
+}
+
+// ---------------- Applications ----------------
+window.showApplications = function() {
+  onSnapshot(collection(db,"applications"), snapshot => {
+    let html = "";
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      html += `
+        <div class="card app-card">
+          <h3>${data.fullName}</h3>
+          <p>${data.mobile}</p>
+          <p>${data.alternate}</p>
+          <p>${data.address}</p>
+        </div>
+      `;
+    });
+    document.getElementById("content").innerHTML = html;
+  });
+}
 </script>
 
 </body>
