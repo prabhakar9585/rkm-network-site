@@ -1,51 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>New Application</title>
-  <link rel="stylesheet" href="style.css">
+    <title>New Application</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>New Application</header>
+<header>
+    <h1>New Application</h1>
+    <img src="./logo.png" class="logo">
+</header>
 
 <div class="main-content">
-  <div class="form-box">
-    <input id="name" placeholder="Full Name">
-    <input id="mobile" placeholder="Mobile Number">
-    <input id="alt" placeholder="Alternate Number">
-    <textarea id="address" placeholder="Address"></textarea>
-    <button id="submitBtn" disabled>Submit</button>
-  </div>
+    <div class="form-box">
+        <form id="appForm">
+
+            <input type="text" id="fullName" placeholder="Full Name" required>
+            <input type="text" id="mobile" placeholder="Mobile Number" required>
+            <input type="text" id="alternate" placeholder="Alternate Number">
+            <textarea id="address" placeholder="Address" required></textarea>
+
+            <button type="submit">Submit</button>
+
+        </form>
+    </div>
 </div>
 
+<footer>
+    <p><strong>RKM NETWORK SOLUTION</strong></p>
+    <p>Mainroad, Eravancherry, 609 501</p>
+    <p>9489449448</p>
+</footer>
+
+
 <script type="module">
+
 import { db } from "./firebase-init.js";
-import { collection, addDoc, serverTimestamp } 
+import { collection, addDoc, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const btn = document.getElementById("submitBtn");
-const inputs = document.querySelectorAll("input, textarea");
+const form = document.getElementById("appForm");
 
-inputs.forEach(i=>{
-  i.addEventListener("input", ()=>{
-    btn.disabled = [...inputs].some(x => x.value.trim() === "");
-  });
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const fullName = document.getElementById("fullName").value.trim();
+    const mobile = document.getElementById("mobile").value.trim();
+    const alternate = document.getElementById("alternate").value.trim();
+    const address = document.getElementById("address").value.trim();
+
+    if(!fullName || !mobile || !address){
+        alert("Please fill required fields");
+        return;
+    }
+
+    await addDoc(collection(db,"applications"),{
+        fullName: fullName,
+        mobile: mobile,
+        alternate: alternate,
+        address: address,
+        createdAt: serverTimestamp()
+    });
+
+    alert("Application Submitted Successfully");
+
+    form.reset();
 });
 
-btn.onclick = async () => {
-
-  await addDoc(collection(db,"applications"),{
-    fullName: name.value,
-    mobile: mobile.value,
-    alternate: alt.value,
-    address: address.value,
-    status:"new",
-    createdAt: serverTimestamp()
-  });
-
-  alert("Application Submitted");
-  location.reload();
-};
 </script>
 
 </body>
