@@ -3,18 +3,30 @@
 <head>
 <title>Admin Dashboard</title>
 <link rel="stylesheet" href="style.css">
+<style>
+.tabs { display:flex; gap:10px; margin:20px; }
+.tab { flex:1; padding:12px; color:white; text-align:center; cursor:pointer; font-weight:bold; }
+.pending{ background:orange;}
+.resolved{ background:green;}
+.application{ background:blue;}
+.container{ display:flex; gap:20px; padding:20px;}
+.list{ width:40%;}
+.details{ width:60%; background:white; padding:20px; border-radius:8px;}
+.card{ background:white; padding:10px; margin-bottom:10px; cursor:pointer;}
+</style>
 </head>
 <body>
 
-<header>RKM NETWORK SOLUTION - Admin Panel</header>
-
 <div class="tabs">
-  <button class="tab pending" onclick="showPending()">Pending Faults (<span id="pendingCount">0</span>)</button>
-  <button class="tab resolved" onclick="showResolved()">Resolved Faults (<span id="resolvedCount">0</span>)</button>
-  <button class="tab applications" onclick="showApplications()">New Applications</button>
+  <div class="tab pending" id="pendingTab">Pending Faults (0)</div>
+  <div class="tab resolved" id="resolvedTab">Resolved Faults (0)</div>
+  <div class="tab application" id="appTab">New Applications</div>
 </div>
 
-<div id="content"></div>
+<div class="container">
+  <div class="list" id="list"></div>
+  <div class="details" id="details">Select item to view details</div>
+</div>
 
 <script type="module">
 import { db } from "./firebase-init.js";
@@ -23,96 +35,81 @@ import {
   query,
   where,
   getDocs,
-  onSnapshot,
-  updateDoc,
-  doc
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-// Load counts
-function loadCounts() {
-  const pendingQ = query(collection(db,"faults"), where("status","==","pending"));
-  const resolvedQ = query(collection(db,"faults"), where("status","==","resolved"));
+const list = document.getElementById("list");
+const details = document.getElementById("details");
 
-  getDocs(pendingQ).then(s => document.getElementById("pendingCount").innerText = s.size);
-  getDocs(resolvedQ).then(s => document.getElementById("resolvedCount").innerText = s.size);
-}
-loadCounts();
-
-// ---------------- Pending ----------------
-window.showPending = function() {
+async function loadPending(){
+  list.innerHTML="";
   const q = query(collection(db,"faults"), where("status","==","pending"));
+  const snap = await getDocs(q);
 
-  onSnapshot(q, snapshot => {
-    let html = "";
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      html += `
-        <div class="card">
-          <h3>${data.landline}</h3>
-          <p>${data.name}</p>
-          <p>${data.faultType}</p>
-          <p>${data.location}</p>
-          <textarea id="res-${docSnap.id}" placeholder="Resolution note"></textarea>
-          <button onclick="resolveFault('${docSnap.id}')">Resolve</button>
-        </div>
+  document.getElementById("pendingTab").innerText = "Pending Faults ("+snap.size+")";
+
+  snap.forEach(d=>{
+    const data = d.data();
+    const div = document.createElement("div");
+    div.className="card";
+    div.innerText = data.name + " - " + data.phone;
+    div.onclick = ()=>{
+      details.innerHTML = `
+        <h3>${data.name}</h3>
+        <p>Phone: ${data.phone}</p>
+        <p>Complaint: ${data.complaint}</p>
+        <textarea id="solution" placeholder="Write resolution"></textarea><br><br>
+        <button onclick="resolve('${d.id}')">Mark Resolved</button>
       `;
-    });
-    document.getElementById("content").innerHTML = html;
+    };
+    list.appendChild(div);
   });
 }
 
-// Resolve
-window.resolveFault = async function(id) {
-  const note = document.getElementById("res-"+id).value;
-
-  await updateDoc(doc(db,"faults",id), {
-    status: "resolved",
-    resolutionNote: note
+window.resolve = async function(id){
+  const solution = document.getElementById("solution").value;
+  await updateDoc(doc(db,"faults",id),{
+    status:"resolved",
+    solution:solution
   });
-
-  loadCounts();
+  loadPending();
+  loadResolved();
+  details.innerHTML="Resolved Successfully";
 }
 
-// ---------------- Resolved ----------------
-window.showResolved = function() {
+async function loadResolved(){
   const q = query(collection(db,"faults"), where("status","==","resolved"));
+  const snap = await getDocs(q);
+  document.getElementById("resolvedTab").innerText="Resolved Faults ("+snap.size+")";
+}
 
-  onSnapshot(q, snapshot => {
-    let html = "";
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      html += `
-        <div class="card resolved-card">
-          <h3>${data.landline}</h3>
-          <p>${data.name}</p>
-          <p>${data.faultType}</p>
-          <p>${data.location}</p>
-          <p><strong>Resolved:</strong> ${data.resolutionNote}</p>
-        </div>
+async function loadApplications(){
+  list.innerHTML="";
+  const snap = await getDocs(collection(db,"applications"));
+  snap.forEach(d=>{
+    const data = d.data();
+    const div = document.createElement("div");
+    div.className="card";
+    div.innerText = data.name + " - " + data.phone;
+    div.onclick=()=>{
+      details.innerHTML = `
+        <h3>${data.name}</h3>
+        <p>Phone: ${data.phone}</p>
+        <p>Address: ${data.address}</p>
+        <p>Area: ${data.area}</p>
       `;
-    });
-    document.getElementById("content").innerHTML = html;
+    };
+    list.appendChild(div);
   });
 }
 
-// ---------------- Applications ----------------
-window.showApplications = function() {
-  onSnapshot(collection(db,"applications"), snapshot => {
-    let html = "";
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      html += `
-        <div class="card app-card">
-          <h3>${data.fullName}</h3>
-          <p>${data.mobile}</p>
-          <p>${data.alternate}</p>
-          <p>${data.address}</p>
-        </div>
-      `;
-    });
-    document.getElementById("content").innerHTML = html;
-  });
-}
+document.getElementById("pendingTab").onclick=loadPending;
+document.getElementById("resolvedTab").onclick=loadResolved;
+document.getElementById("appTab").onclick=loadApplications;
+
+loadPending();
+loadResolved();
 </script>
 
 </body>

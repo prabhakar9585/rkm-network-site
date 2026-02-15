@@ -1,120 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fault Booking</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="data.js"></script>
+<title>Fault Booking</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-    <img src="./logo.png" class="logo">
-    <h1>Fault Booking</h1>
-</header>
+<h2>Fault Booking</h2>
 
-<div class="main-content">
-    <div class="form-box">
-        <form id="faultForm">
+<input id="name" placeholder="Name"><br><br>
+<input id="phone" placeholder="Phone"><br><br>
+<input id="complaint" placeholder="Fault Type"><br><br>
 
-            <input type="text" id="landline" 
-                   placeholder="Landline Number" 
-                   oninput="findCustomer()">
-
-            <input type="text" id="custname" 
-                   placeholder="Customer Name" 
-                   readonly>
-
-            <select id="fault">
-                <option value="">Select Fault Type</option>
-                <option>No Internet</option>
-                <option>Slow Internet</option>
-                <option>Red Light Blink</option>
-                <option>Landline Dead</option>
-                <option>Billing Issue</option>
-            </select>
-
-            <input type="text" id="location" placeholder="Location">
-
-            <button type="submit" id="faultSubmit" disabled>Submit</button>
-
-        </form>
-    </div>
-</div>
-
-<footer>
-    <p><strong>RKM NETWORK SOLUTION</strong></p>
-    <p>Mainroad, Eravancherry, 609 501</p>
-    <p>9489449448</p>
-</footer>
+<button id="submitBtn">Submit</button>
 
 <script type="module">
 import { db } from "./firebase-init.js";
-import { collection, addDoc, serverTimestamp } 
+import { collection, addDoc, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const form = document.getElementById("faultForm");
-const submitBtn = document.getElementById("faultSubmit");
+document.getElementById("submitBtn").addEventListener("click", async () => {
 
-const landlineField = document.getElementById("landline");
-const nameField = document.getElementById("custname");
-const faultField = document.getElementById("fault");
-const locationField = document.getElementById("location");
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const complaint = document.getElementById("complaint").value;
 
-function findCustomer(){
-    const number = landlineField.value.trim();
-    if(customers[number]){
-        nameField.value = customers[number];
-    } else {
-        nameField.value = "";
-    }
-    validateFaultForm();
-}
-window.findCustomer = findCustomer;
+  if(!name || !phone || !complaint){
+    alert("Fill all fields");
+    return;
+  }
 
-function validateFaultForm(){
-    if(
-        customers[landlineField.value.trim()] &&
-        faultField.value &&
-        locationField.value.trim()
-    ){
-        submitBtn.disabled = false;
-    } else {
-        submitBtn.disabled = true;
-    }
-}
+  await addDoc(collection(db, "faults"), {
+    name,
+    phone,
+    complaint,
+    status: "pending",
+    createdAt: serverTimestamp()
+  });
 
-form.addEventListener("input", validateFaultForm);
-
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    try{
-        await addDoc(collection(db, "faults"), {
-            landline: landlineField.value,
-            name: nameField.value,
-            faultType: faultField.value,
-            location: locationField.value,
-            status: "Pending",
-            resolutionNote: "",
-            createdAt: serverTimestamp()
-        });
-
-        let msg = `Fault Booking:%0A
-Landline: ${landlineField.value}%0A
-Name: ${nameField.value}%0A
-Fault: ${faultField.value}%0A
-Location: ${locationField.value}`;
-
-        window.open(`https://wa.me/919489449448?text=${msg}`);
-
-        alert("Fault Submitted Successfully!");
-        form.reset();
-        submitBtn.disabled = true;
-
-    } catch(err){
-        alert("Error submitting fault");
-        console.error(err);
-    }
+  alert("Fault Submitted");
 });
 </script>
 
