@@ -32,9 +32,7 @@
     <p>9489449448</p>
 </footer>
 
-
 <script type="module">
-
 import { db } from "./firebase-init.js";
 import { collection, addDoc, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
@@ -55,18 +53,16 @@ form.addEventListener("submit", async (e) => {
     }
 
     await addDoc(collection(db,"applications"),{
-    fullName: fullName.value,
-    mobile: mobile.value,
-    alternate: alternate.value,
-    location: location.value,
-    createdAt: serverTimestamp()
-});
+        fullName: fullName,
+        mobile: mobile,
+        alternate: alternate,
+        address: address,
+        createdAt: serverTimestamp()
+    });
 
     alert("Application Submitted Successfully");
-
     form.reset();
 });
-
 </script>
 
 </body>
