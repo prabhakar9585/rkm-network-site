@@ -3,52 +3,57 @@
 <head>
     <title>New Applications</title>
     <link rel="stylesheet" href="style.css">
-    <script type="module">
-        import { db } from "./firebase-init.js";
-        import {
-            collection,
-            getDocs,
-            query,
-            orderBy
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-        const container = document.getElementById("list");
-
-        async function loadApplications() {
-            const q = query(
-                collection(db, "applications"),
-                orderBy("createdAt", "desc")
-            );
-
-            const snapshot = await getDocs(q);
-
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-
-                const div = document.createElement("div");
-                div.className = "card";
-
-                div.innerHTML = `
-                    <p><b>Name:</b> ${data.fullName}</p>
-                    <p><b>Mobile:</b> ${data.mobile}</p>
-                    <p><b>Alternate:</b> ${data.alternate}</p>
-                    <p><b>Location:</b> ${data.location}</p>
-                `;
-
-                container.appendChild(div);
-            });
-        }
-
-        window.onload = loadApplications;
-    </script>
 </head>
 <body>
 
 <header>
-    <h2>New Applications</h2>
+    <h1>New Applications</h1>
 </header>
 
-<div id="list" class="vertical-list"></div>
+<div class="main-content">
+    <div id="appList" class="vertical-list"></div>
+</div>
+
+<script type="module">
+import { db } from "./firebase-init.js";
+import {
+    collection,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const list = document.getElementById("appList");
+
+async function loadApps(){
+
+    list.innerHTML = "";
+
+    const snapshot = await getDocs(collection(db,"applications"));
+
+    if(snapshot.empty){
+        list.innerHTML = "<p>No Applications</p>";
+        return;
+    }
+
+    snapshot.forEach(docSnap => {
+
+        const data = docSnap.data();
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <h3>${data.fullName || "No Name"}</h3>
+            <p>Mobile: ${data.mobile || "-"}</p>
+            <p>Alternate: ${data.alternate || "-"}</p>
+            <p>Location: ${data.location || "-"}</p>
+        `;
+
+        list.appendChild(card);
+    });
+}
+
+loadApps();
+</script>
 
 </body>
 </html>
