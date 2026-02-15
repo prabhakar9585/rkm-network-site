@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<h1>Admin Dashboard</h1>
+</header>
+
+<div class="main-content">
+<h3>Pending Faults: <span id="pendingCount">0</span></h3>
+<h3>Resolved Faults: <span id="resolvedCount">0</span></h3>
+<h3>New Applications: <span id="appCount">0</span></h3>
+
+<div id="faultList"></div>
+</div>
+
+<script type="module">
+import { db } from "./firebase-init.js";
+import { collection, getDocs, updateDoc, doc }
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const pendingCount = document.getElementById("pendingCount");
+const resolvedCount = document.getElementById("resolvedCount");
+const appCount = document.getElementById("appCount");
+const faultList = document.getElementById("faultList");
+
+async function loadData(){
+
+  const faultSnap = await getDocs(collection(db,"faults"));
+  let pending = 0;
+  let resolved = 0;
+  faultList.innerHTML="";
+
+  faultSnap.forEach(docSnap=>{
+    const data = docSnap.data();
+
+    if(data.status==="Pending") pending++;
+    else resolved++;
+
+    if(data.status==="Pending"){
+      faultList.innerHTML += `
+        <div style="background:white;padding:10px;margin:10px;">
+        ${data.landline} - ${data.name} - ${data.faultType}
+        <button onclick="resolve('${docSnap.id}')">Resolve</button>
+        </div>`;
+    }
+  });
+
+  pendingCount.innerText = pending;
+  resolvedCount.innerText = resolved;
+
+  const appSnap = await getDocs(collection(db,"applications"));
+  appCount.innerText = appSnap.size;
+}
+
+window.resolve = async function(id){
+  const note = prompt("Enter Resolution Note:");
+  if(!note) return;
+
+  await updateDoc(doc(db,"faults",id),{
+    status:"Resolved",
+    resolutionNote:note
+  });
+
+  loadData();
+}
+
+loadData();
+</script>
+
+</body>
+</html>

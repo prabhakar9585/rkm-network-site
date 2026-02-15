@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Application</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <img src="./logo.png" class="logo">
+    <h1>New Application</h1>
+</header>
+
+<div class="main-content">
+    <div class="form-box">
+        <form id="newForm">
+            <input type="text" id="name" placeholder="Full Name">
+            <input type="tel" id="mobile" placeholder="Mobile Number">
+            <input type="tel" id="alt" placeholder="Alternate Number">
+            <textarea id="address" placeholder="Address"></textarea>
+            <button type="submit" id="newSubmit" disabled>Submit</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    <p><strong>RKM NETWORK SOLUTION</strong></p>
+    <p>Mainroad, Eravancherry, 609 501</p>
+    <p>9489449448</p>
+</footer>
+
+<script type="module">
+import { db } from "./firebase-init.js";
+import { collection, addDoc, serverTimestamp } 
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const form = document.getElementById("newForm");
+const submitBtn = document.getElementById("newSubmit");
+
+const nameField = document.getElementById("name");
+const mobileField = document.getElementById("mobile");
+const altField = document.getElementById("alt");
+const addressField = document.getElementById("address");
+
+function validateForm(){
+    if(
+        nameField.value.trim() &&
+        mobileField.value.trim() &&
+        altField.value.trim() &&
+        addressField.value.trim()
+    ){
+        submitBtn.disabled = false;
+    } else {
+        submitBtn.disabled = true;
+    }
+}
+
+form.addEventListener("input", validateForm);
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    try{
+        await addDoc(collection(db, "applications"), {
+            name: nameField.value,
+            mobile: mobileField.value,
+            alt: altField.value,
+            address: addressField.value,
+            createdAt: serverTimestamp()
+        });
+
+        let msg = `New Application:%0A
+Name: ${nameField.value}%0A
+Mobile: ${mobileField.value}%0A
+Alternate: ${altField.value}%0A
+Address: ${addressField.value}`;
+
+        window.open(`https://wa.me/919489449448?text=${msg}`);
+
+        alert("Application Submitted Successfully!");
+        form.reset();
+        submitBtn.disabled = true;
+
+    } catch(err){
+        alert("Error submitting application");
+        console.error(err);
+    }
+});
+</script>
+
+</body>
+</html>
