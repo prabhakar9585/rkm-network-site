@@ -258,3 +258,56 @@ button {
     margin-bottom: 15px;
     border-radius: 6px;
 }
+.admin-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin: 30px;
+}
+
+.btn {
+    padding: 15px 40px;
+    text-decoration: none;
+    color: white;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.pending {
+    background: orange;
+}
+
+.resolved {
+    background: green;
+}
+
+.applications {
+    background: #3f51b5;
+}
+
+.vertical-list {
+    width: 80%;
+    margin: 30px auto;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+textarea {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+}
+
+button {
+    margin-top: 10px;
+    padding: 8px 20px;
+    background: orange;
+    border: none;
+    color: white;
+    border-radius: 5px;
+}

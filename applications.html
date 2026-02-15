@@ -3,43 +3,52 @@
 <head>
     <title>New Applications</title>
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="firebase-init.js"></script>
+    <script type="module">
+        import { db } from "./firebase-init.js";
+        import {
+            collection,
+            getDocs,
+            query,
+            orderBy
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const container = document.getElementById("list");
+
+        async function loadApplications() {
+            const q = query(
+                collection(db, "applications"),
+                orderBy("createdAt", "desc")
+            );
+
+            const snapshot = await getDocs(q);
+
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+
+                const div = document.createElement("div");
+                div.className = "card";
+
+                div.innerHTML = `
+                    <p><b>Name:</b> ${data.fullName}</p>
+                    <p><b>Mobile:</b> ${data.mobile}</p>
+                    <p><b>Alternate:</b> ${data.alternate}</p>
+                    <p><b>Location:</b> ${data.location}</p>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        window.onload = loadApplications;
+    </script>
 </head>
 <body>
 
 <header>
-    <h1>New Applications</h1>
+    <h2>New Applications</h2>
 </header>
 
-<div id="appList" class="vertical-list"></div>
-
-<script type="module">
-import { db } from "./firebase-init.js";
-import { collection, query, orderBy, onSnapshot } from 
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const list = document.getElementById("appList");
-
-const q = query(
-    collection(db, "applications"),
-    orderBy("createdAt", "desc")
-);
-
-onSnapshot(q, (snapshot) => {
-    list.innerHTML = "";
-    snapshot.forEach(doc => {
-        const data = doc.data();
-
-        list.innerHTML += `
-        <div class="card">
-            <p><strong>Name:</strong> ${data.fullName}</p>
-            <p><strong>Mobile:</strong> ${data.mobile}</p>
-            <p><strong>Alternate:</strong> ${data.alternate}</p>
-            <p><strong>Location:</strong> ${data.location}</p>
-        </div>`;
-    });
-});
-</script>
+<div id="list" class="vertical-list"></div>
 
 </body>
 </html>

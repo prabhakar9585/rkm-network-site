@@ -3,43 +3,53 @@
 <head>
     <title>Resolved Faults</title>
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="firebase-init.js"></script>
+    <script type="module">
+        import { db } from "./firebase-init.js";
+        import {
+            collection,
+            getDocs,
+            query,
+            where,
+            orderBy
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const container = document.getElementById("list");
+
+        async function loadResolved() {
+            const q = query(
+                collection(db, "faults"),
+                where("status", "==", "resolved"),
+                orderBy("createdAt", "desc")
+            );
+
+            const snapshot = await getDocs(q);
+
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+
+                const div = document.createElement("div");
+                div.className = "card";
+
+                div.innerHTML = `
+                    <p><b>Name:</b> ${data.name}</p>
+                    <p><b>Landline:</b> ${data.landline}</p>
+                    <p><b>Solution:</b> ${data.solution}</p>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        window.onload = loadResolved;
+    </script>
 </head>
 <body>
 
 <header>
-    <h1>Resolved Faults</h1>
+    <h2>Resolved Faults</h2>
 </header>
 
-<div id="resolvedList" class="vertical-list"></div>
-
-<script type="module">
-import { db } from "./firebase-init.js";
-import { collection, query, where, orderBy, onSnapshot } from 
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const list = document.getElementById("resolvedList");
-
-const q = query(
-    collection(db, "faults"),
-    where("status", "==", "resolved"),
-    orderBy("resolvedAt", "desc")
-);
-
-onSnapshot(q, (snapshot) => {
-    list.innerHTML = "";
-    snapshot.forEach(doc => {
-        const data = doc.data();
-
-        list.innerHTML += `
-        <div class="card">
-            <p><strong>Name:</strong> ${data.name}</p>
-            <p><strong>Landline:</strong> ${data.landline}</p>
-            <p><strong>Solution:</strong> ${data.solution}</p>
-        </div>`;
-    });
-});
-</script>
+<div id="list" class="vertical-list"></div>
 
 </body>
 </html>

@@ -3,40 +3,71 @@
 <head>
     <title>Pending Faults</title>
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="firebase-init.js"></script>
+    <script type="module">
+        import { db } from "./firebase-init.js";
+        import {
+            collection,
+            getDocs,
+            updateDoc,
+            doc,
+            query,
+            where,
+            orderBy
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const container = document.getElementById("list");
+
+        async function loadPending() {
+            const q = query(
+                collection(db, "faults"),
+                where("status", "==", "pending"),
+                orderBy("createdAt", "desc")
+            );
+
+            const snapshot = await getDocs(q);
+
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+
+                const div = document.createElement("div");
+                div.className = "card";
+
+                div.innerHTML = `
+                    <p><b>Landline:</b> ${data.landline}</p>
+                    <p><b>Name:</b> ${data.name}</p>
+                    <p><b>Fault:</b> ${data.fault}</p>
+                    <p><b>Location:</b> ${data.location}</p>
+
+                    <textarea placeholder="Enter solution" id="sol-${docSnap.id}"></textarea>
+                    <button onclick="resolveFault('${docSnap.id}')">Resolve</button>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        window.resolveFault = async function(id) {
+            const solution = document.getElementById("sol-" + id).value;
+
+            await updateDoc(doc(db, "faults", id), {
+                status: "resolved",
+                solution: solution
+            });
+
+            alert("Marked as Resolved");
+            location.reload();
+        }
+
+        window.onload = loadPending;
+    </script>
 </head>
 <body>
 
 <header>
-    <h1>Pending Faults</h1>
+    <h2>Pending Faults</h2>
 </header>
 
-<div id="pendingList" class="vertical-list"></div>
-
-<script type="module">
-import { db } from "./firebase-init.js";
-import { collection, query, where, onSnapshot } from 
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const list = document.getElementById("pendingList");
-
-const q = query(collection(db, "faults"), where("status", "==", "pending"));
-
-onSnapshot(q, (snapshot) => {
-    list.innerHTML = "";
-    snapshot.forEach(doc => {
-        const data = doc.data();
-
-        list.innerHTML += `
-        <div class="card">
-            <p><strong>Landline:</strong> ${data.landline}</p>
-            <p><strong>Name:</strong> ${data.name}</p>
-            <p><strong>Fault Type:</strong> ${data.faultType}</p>
-            <p><strong>Location:</strong> ${data.location}</p>
-        </div>`;
-    });
-});
-</script>
+<div id="list" class="vertical-list"></div>
 
 </body>
 </html>
