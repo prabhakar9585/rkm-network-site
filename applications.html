@@ -14,7 +14,7 @@
 
 <script type="module">
 import { db } from "./firebase-init.js";
-import { collection, getDocs }
+import { collection, getDocs, deleteDoc, doc }
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const list = document.getElementById("appList");
@@ -26,6 +26,7 @@ async function loadApplications() {
 
     snapshot.docs.reverse().forEach((docSnap) => {
         const data = docSnap.data();
+        const id = docSnap.id;
 
         const card = document.createElement("div");
         card.className = "card";
@@ -35,10 +36,23 @@ async function loadApplications() {
             <p><strong>Mobile:</strong> ${data.mobile || "-"}</p>
             <p><strong>Alternate:</strong> ${data.alternate || "-"}</p>
             <p><strong>Address:</strong> ${data.address || "Not Provided"}</p>
+            <button class="btn" data-id="${id}">Read</button>
             <hr>
         `;
 
         list.appendChild(card);
+    });
+
+    // Add delete event
+    document.querySelectorAll(".btn").forEach(btn => {
+        btn.addEventListener("click", async function() {
+            const id = this.getAttribute("data-id");
+
+            if(confirm("Mark as Read and remove?")) {
+                await deleteDoc(doc(db, "applications", id));
+                loadApplications();
+            }
+        });
     });
 }
 

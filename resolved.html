@@ -14,7 +14,7 @@
 
 <script type="module">
 import { db } from "./firebase-init.js";
-import { collection, getDocs } 
+import { collection, getDocs, deleteDoc, doc }
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const list = document.getElementById("resolvedList");
@@ -26,6 +26,7 @@ async function loadResolved() {
 
     snapshot.docs.reverse().forEach((docSnap) => {
         const data = docSnap.data();
+        const id = docSnap.id;
 
         const card = document.createElement("div");
         card.className = "card";
@@ -36,10 +37,22 @@ async function loadResolved() {
             <p><strong>Fault:</strong> ${data.fault || "-"}</p>
             <p><strong>Location:</strong> ${data.location || "-"}</p>
             <p><strong>Solution:</strong> ${data.solution || "-"}</p>
+            <button class="btn" data-id="${id}">Clear</button>
             <hr>
         `;
 
         list.appendChild(card);
+    });
+
+    document.querySelectorAll(".btn").forEach(btn => {
+        btn.addEventListener("click", async function() {
+            const id = this.getAttribute("data-id");
+
+            if(confirm("Delete this resolved record permanently?")) {
+                await deleteDoc(doc(db, "resolvedFaults", id));
+                loadResolved();
+            }
+        });
     });
 }
 
