@@ -1,45 +1,113 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Fault Booking</title>
-<link rel="stylesheet" href="style.css">
+    <title>Fault Booking</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="data.js"></script>
 </head>
 <body>
 
-<h2>Fault Booking</h2>
+<header>
+    <h1>Fault Booking</h1>
+    <img src="./logo.png" class="logo">
+</header>
 
-<input id="name" placeholder="Name"><br><br>
-<input id="phone" placeholder="Phone"><br><br>
-<input id="complaint" placeholder="Fault Type"><br><br>
+<div class="main-content">
+    <div class="form-box">
+        <form id="faultForm">
+            <input type="text" id="landline" placeholder="Landline Number" oninput="findCustomer()">
+            <input type="text" id="custname" placeholder="Customer Name" readonly>
+            
+            <select id="fault">
+                <option value="">Select Fault Type</option>
+                <option>No Internet</option>
+                <option>Slow Internet</option>
+                <option>Red Light Blink</option>
+                <option>Landline Dead</option>  
+                <option>Billing Issue</option>
+            </select>
 
-<button id="submitBtn">Submit</button>
+            <input type="text" id="location" placeholder="Location">
 
+            <button type="submit" id="faultSubmit" class="hidden">Submit</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    <p><strong>RKM NETWORK SOLUTION</strong></p>
+    <p>Mainroad, Eravancherry, 609 501</p>
+    <p>9489449448</p>
+</footer>
+
+
+<!-- 🔥 Firebase Script -->
 <script type="module">
+
 import { db } from "./firebase-init.js";
 import { collection, addDoc, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-document.getElementById("submitBtn").addEventListener("click", async () => {
+const faultForm = document.getElementById("faultForm");
+const faultSubmit = document.getElementById("faultSubmit");
 
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
-  const complaint = document.getElementById("complaint").value;
+const landline = document.getElementById("landline");
+const custname = document.getElementById("custname");
+const fault = document.getElementById("fault");
+const locationField = document.getElementById("location");
 
-  if(!name || !phone || !complaint){
-    alert("Fill all fields");
-    return;
-  }
+window.findCustomer = function(){
+    const number = landline.value.trim();
+    if(customers[number]){
+        custname.value = customers[number];
+    } else {
+        custname.value = "";
+    }
+};
 
-  await addDoc(collection(db, "faults"), {
-    name,
-    phone,
-    complaint,
-    status: "pending",
-    createdAt: serverTimestamp()
-  });
+faultForm.addEventListener("input", function(){
+    const number = landline.value.trim();
 
-  alert("Fault Submitted");
+    if(customers[number] && fault.value && locationField.value){
+        faultSubmit.classList.remove("hidden");
+    } else {
+        faultSubmit.classList.add("hidden");
+    }
 });
+
+faultForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+
+    const number = landline.value.trim();
+    const name = customers[number];
+    const faultType = fault.value;
+    const locationValue = locationField.value;
+
+    // ✅ Save to Firebase (for admin)
+    await addDoc(collection(db,"faults"),{
+        landline:number,
+        name:name,
+        fault:faultType,
+        location:locationValue,
+        status:"pending",
+        createdAt: serverTimestamp()
+    });
+
+    // ✅ Send WhatsApp
+    let msg = `Fault Booking:%0A
+Landline: ${number}%0A
+Name: ${name}%0A
+Fault: ${faultType}%0A
+Location: ${locationValue}`;
+
+    window.open(`https://wa.me/919489449448?text=${msg}`);
+
+    alert("Fault Booked Successfully");
+
+    faultForm.reset();
+    faultSubmit.classList.add("hidden");
+});
+
 </script>
 
 </body>

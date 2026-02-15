@@ -1,47 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>New Application</title>
-<link rel="stylesheet" href="style.css">
+  <title>New Application</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>New Application</h2>
+<header>New Application</header>
 
-<input id="name" placeholder="Full Name"><br><br>
-<input id="phone" placeholder="Mobile Number"><br><br>
-<input id="address" placeholder="Address"><br><br>
-<input id="area" placeholder="Area"><br><br>
-
-<button id="submitBtn">Submit</button>
+<div class="main-content">
+  <div class="form-box">
+    <input id="name" placeholder="Full Name">
+    <input id="mobile" placeholder="Mobile Number">
+    <input id="alt" placeholder="Alternate Number">
+    <textarea id="address" placeholder="Address"></textarea>
+    <button id="submitBtn" disabled>Submit</button>
+  </div>
+</div>
 
 <script type="module">
 import { db } from "./firebase-init.js";
-import { collection, addDoc, serverTimestamp }
+import { collection, addDoc, serverTimestamp } 
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-document.getElementById("submitBtn").addEventListener("click", async () => {
+const btn = document.getElementById("submitBtn");
+const inputs = document.querySelectorAll("input, textarea");
 
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
-  const address = document.getElementById("address").value;
-  const area = document.getElementById("area").value;
+inputs.forEach(i=>{
+  i.addEventListener("input", ()=>{
+    btn.disabled = [...inputs].some(x => x.value.trim() === "");
+  });
+});
 
-  if(!name || !phone || !address || !area){
-    alert("Fill all fields");
-    return;
-  }
+btn.onclick = async () => {
 
-  await addDoc(collection(db, "applications"), {
-    name,
-    phone,
-    address,
-    area,
+  await addDoc(collection(db,"applications"),{
+    fullName: name.value,
+    mobile: mobile.value,
+    alternate: alt.value,
+    address: address.value,
+    status:"new",
     createdAt: serverTimestamp()
   });
 
   alert("Application Submitted");
-});
+  location.reload();
+};
 </script>
 
 </body>
