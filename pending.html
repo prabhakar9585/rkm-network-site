@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pending Faults</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="firebase-init.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Pending Faults</h1>
+</header>
+
+<div id="pendingList" class="vertical-list"></div>
+
+<script type="module">
+import { db } from "./firebase-init.js";
+import { collection, query, where, onSnapshot } from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const list = document.getElementById("pendingList");
+
+const q = query(collection(db, "faults"), where("status", "==", "pending"));
+
+onSnapshot(q, (snapshot) => {
+    list.innerHTML = "";
+    snapshot.forEach(doc => {
+        const data = doc.data();
+
+        list.innerHTML += `
+        <div class="card">
+            <p><strong>Landline:</strong> ${data.landline}</p>
+            <p><strong>Name:</strong> ${data.name}</p>
+            <p><strong>Fault Type:</strong> ${data.faultType}</p>
+            <p><strong>Location:</strong> ${data.location}</p>
+        </div>`;
+    });
+});
+</script>
+
+</body>
+</html>

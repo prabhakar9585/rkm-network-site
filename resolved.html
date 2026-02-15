@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resolved Faults</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="firebase-init.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Resolved Faults</h1>
+</header>
+
+<div id="resolvedList" class="vertical-list"></div>
+
+<script type="module">
+import { db } from "./firebase-init.js";
+import { collection, query, where, orderBy, onSnapshot } from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const list = document.getElementById("resolvedList");
+
+const q = query(
+    collection(db, "faults"),
+    where("status", "==", "resolved"),
+    orderBy("resolvedAt", "desc")
+);
+
+onSnapshot(q, (snapshot) => {
+    list.innerHTML = "";
+    snapshot.forEach(doc => {
+        const data = doc.data();
+
+        list.innerHTML += `
+        <div class="card">
+            <p><strong>Name:</strong> ${data.name}</p>
+            <p><strong>Landline:</strong> ${data.landline}</p>
+            <p><strong>Solution:</strong> ${data.solution}</p>
+        </div>`;
+    });
+});
+</script>
+
+</body>
+</html>

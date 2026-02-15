@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Applications</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="firebase-init.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>New Applications</h1>
+</header>
+
+<div id="appList" class="vertical-list"></div>
+
+<script type="module">
+import { db } from "./firebase-init.js";
+import { collection, query, orderBy, onSnapshot } from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const list = document.getElementById("appList");
+
+const q = query(
+    collection(db, "applications"),
+    orderBy("createdAt", "desc")
+);
+
+onSnapshot(q, (snapshot) => {
+    list.innerHTML = "";
+    snapshot.forEach(doc => {
+        const data = doc.data();
+
+        list.innerHTML += `
+        <div class="card">
+            <p><strong>Name:</strong> ${data.fullName}</p>
+            <p><strong>Mobile:</strong> ${data.mobile}</p>
+            <p><strong>Alternate:</strong> ${data.alternate}</p>
+            <p><strong>Location:</strong> ${data.location}</p>
+        </div>`;
+    });
+});
+</script>
+
+</body>
+</html>
