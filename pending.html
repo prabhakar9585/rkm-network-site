@@ -10,67 +10,68 @@
     <h1>Pending Faults</h1>
 </header>
 
-<div class="main-content">
-    <div id="pendingList"></div>
-</div>
+<div id="faultList" class="container"></div>
 
 <script type="module">
 import { db } from "./firebase-init.js";
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc }
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import {
+    collection,
+    getDocs,
+    doc,
+    updateDoc,
+    deleteDoc,
+    addDoc
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const container = document.getElementById("pendingList");
+const list = document.getElementById("faultList");
 
-const q = query(
-    collection(db,"faults"),
-    where("status","==","pending"),
-    orderBy("createdAt","desc")
-);
+async function loadFaults() {
+    list.innerHTML = "";
 
-onSnapshot(q,(snapshot)=>{
+    const snapshot = await getDocs(collection(db, "faults"));
 
-    container.innerHTML = "";
-
-    if(snapshot.empty){
-        container.innerHTML = "<p>No Pending Faults</p>";
-        return;
-    }
-
-    snapshot.forEach((docSnap)=>{
-
+    snapshot.forEach((docSnap) => {
         const data = docSnap.data();
+        const id = docSnap.id;
 
-        const div = document.createElement("div");
-        div.className = "fault-item";
+        const card = document.createElement("div");
+        card.className = "card";
 
-        div.innerHTML = `
+        card.innerHTML = `
             <p><strong>Landline:</strong> ${data.landline || "-"}</p>
             <p><strong>Name:</strong> ${data.name || "-"}</p>
-            <p><strong>Fault:</strong> ${data.faultType || "-"}</p>
+            <p><strong>Fault:</strong> ${data.fault || "-"}</p>
             <p><strong>Location:</strong> ${data.location || "-"}</p>
-            <button onclick="resolveFault('${docSnap.id}')">Resolve</button>
+            <button onclick="resolveFault('${id}')">Resolve</button>
             <hr>
         `;
 
-        container.appendChild(div);
+        list.appendChild(card);
+    });
+}
+
+window.resolveFault = async function(id) {
+    const reason = prompt("Enter Resolution Reason:");
+    if (!reason) return;
+
+    const faultRef = doc(db, "faults", id);
+    const snapshot = await getDocs(collection(db, "faults"));
+
+    const singleDoc = snapshot.docs.find(d => d.id === id);
+    const data = singleDoc.data();
+
+    await addDoc(collection(db, "resolvedFaults"), {
+        ...data,
+        solution: reason
     });
 
-});
-
-window.resolveFault = async function(id){
-
-    const reason = prompt("Enter Solution");
-
-    if(!reason) return;
-
-    await updateDoc(doc(db,"faults",id),{
-        status: "resolved",
-        solution: reason,
-        resolvedAt: new Date()
-    });
+    await deleteDoc(faultRef);
 
     alert("Moved to Resolved");
+    loadFaults();
 };
+
+loadFaults();
 </script>
 
 </body>

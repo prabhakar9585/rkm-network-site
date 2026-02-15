@@ -1,40 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Applications</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>New Applications</h1>
+</header>
+
+<div id="appList" class="container"></div>
+
 <script type="module">
 import { db } from "./firebase-init.js";
-import { collection, query, orderBy, onSnapshot }
+import { collection, getDocs }
 from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const container = document.getElementById("applicationsList");
+const list = document.getElementById("appList");
 
-const q = query(
-    collection(db,"applications"),
-    orderBy("createdAt","desc")
-);
+async function loadApplications() {
+    list.innerHTML = "";
 
-onSnapshot(q,(snapshot)=>{
+    const snapshot = await getDocs(collection(db, "applications"));
 
-    container.innerHTML = "";
-
-    if(snapshot.empty){
-        container.innerHTML = "<p>No Applications Found</p>";
-        return;
-    }
-
-    snapshot.forEach((docSnap)=>{
+    snapshot.docs.reverse().forEach((docSnap) => {
         const data = docSnap.data();
 
-        const div = document.createElement("div");
-        div.className = "app-item";
+        const card = document.createElement("div");
+        card.className = "card";
 
-        div.innerHTML = `
+        card.innerHTML = `
             <p><strong>Name:</strong> ${data.fullName || "-"}</p>
             <p><strong>Mobile:</strong> ${data.mobile || "-"}</p>
             <p><strong>Alternate:</strong> ${data.alternate || "-"}</p>
-            <p><strong>Address:</strong> ${data.address || "-"}</p>
+            <p><strong>Location:</strong> ${data.location || "-"}</p>
             <hr>
         `;
 
-        container.appendChild(div);
+        list.appendChild(card);
     });
+}
 
-});
+loadApplications();
 </script>
+
+</body>
+</html>
