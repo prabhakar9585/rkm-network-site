@@ -20,20 +20,20 @@ import {
     collection,
     query,
     where,
-    getDocs,
-    updateDoc,
-    doc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    orderBy,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const list = document.getElementById("faultList");
 
-async function loadFaults() {
+async function loadPending(){
 
     list.innerHTML = "";
 
     const q = query(
-        collection(db, "faults"),
-        where("status", "==", "pending")
+        collection(db,"faults"),
+        where("status","==","pending"),
+        orderBy("createdAt","desc")
     );
 
     const snapshot = await getDocs(q);
@@ -51,38 +51,17 @@ async function loadFaults() {
         card.className = "card";
 
         card.innerHTML = `
-            <h3>${data.name || "No Name"}</h3>
-            <p>Landline: ${data.landline || "-"}</p>
-            <p>Fault: ${data.faultType || "-"}</p>
-            <p>Location: ${data.location || "-"}</p>
-
-            <textarea placeholder="Write solution..." id="sol-${docSnap.id}"></textarea>
-            <button onclick="resolveFault('${docSnap.id}')">Resolve</button>
+            <p><strong>Landline:</strong> ${data.landline}</p>
+            <p><strong>Name:</strong> ${data.name}</p>
+            <p><strong>Fault:</strong> ${data.fault}</p>
+            <p><strong>Location:</strong> ${data.location}</p>
         `;
 
         list.appendChild(card);
     });
 }
 
-window.resolveFault = async function(id){
-
-    const solution = document.getElementById("sol-"+id).value;
-
-    if(!solution){
-        alert("Enter solution first");
-        return;
-    }
-
-    await updateDoc(doc(db,"faults",id),{
-        status:"resolved",
-        solution:solution
-    });
-
-    alert("Fault Resolved");
-    loadFaults();
-};
-
-loadFaults();
+loadPending();
 </script>
 
 </body>

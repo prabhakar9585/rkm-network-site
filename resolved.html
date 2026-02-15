@@ -20,8 +20,9 @@ import {
     collection,
     query,
     where,
+    orderBy,
     getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const list = document.getElementById("resolvedList");
 
@@ -31,7 +32,8 @@ async function loadResolved(){
 
     const q = query(
         collection(db,"faults"),
-        where("status","==","resolved")
+        where("status","==","resolved"),
+        orderBy("createdAt","desc")
     );
 
     const snapshot = await getDocs(q);
@@ -49,11 +51,11 @@ async function loadResolved(){
         card.className = "card";
 
         card.innerHTML = `
-            <h3>${data.name || "No Name"}</h3>
-            <p>Landline: ${data.landline || "-"}</p>
-            <p>Fault: ${data.faultType || "-"}</p>
-            <p>Location: ${data.location || "-"}</p>
-            <p><strong>Solution:</strong> ${data.solution || "-"}</p>
+            <p><strong>Landline:</strong> ${data.landline}</p>
+            <p><strong>Name:</strong> ${data.name}</p>
+            <p><strong>Fault:</strong> ${data.fault}</p>
+            <p><strong>Location:</strong> ${data.location}</p>
+            <p><strong>Solution:</strong> ${data.solution}</p>
         `;
 
         list.appendChild(card);

@@ -55,12 +55,12 @@ form.addEventListener("submit", async (e) => {
     }
 
     await addDoc(collection(db,"applications"),{
-        fullName: fullName,
-        mobile: mobile,
-        alternate: alternate,
-        address: address,
-        createdAt: serverTimestamp()
-    });
+    fullName: fullName.value,
+    mobile: mobile.value,
+    alternate: alternate.value,
+    location: location.value,
+    createdAt: serverTimestamp()
+});
 
     alert("Application Submitted Successfully");
 
