@@ -441,3 +441,18 @@ align-items:center;
 min-height:80vh;
 padding:20px;
 }
+/* Admin dashboard mobile layout */
+.dashboard-buttons{
+display:flex;
+flex-direction:column;
+gap:15px;
+padding:20px;
+}
+
+.dashboard-buttons a{
+width:100%;
+text-align:center;
+padding:14px;
+font-size:18px;
+border-radius:8px;
+}
