@@ -15,9 +15,14 @@
 <div class="main-content">
     <div class="form-box">
         <form id="faultForm">
+
             <input type="text" id="landline" placeholder="Landline Number" oninput="findCustomer()">
+
             <input type="text" id="custname" placeholder="Customer Name" readonly>
-            
+
+            <!-- ✅ NEW MOBILE NUMBER FIELD -->
+            <input type="text" id="mobile" placeholder="Mobile Number">
+
             <select id="fault">
                 <option value="">Select Fault Type</option>
                 <option>No Internet</option>
@@ -30,6 +35,7 @@
             <input type="text" id="location" placeholder="Location">
 
             <button type="submit" id="faultSubmit" class="hidden">Submit</button>
+
         </form>
     </div>
 </div>
@@ -53,6 +59,7 @@ const faultSubmit = document.getElementById("faultSubmit");
 
 const landline = document.getElementById("landline");
 const custname = document.getElementById("custname");
+const mobile = document.getElementById("mobile");   // ✅ NEW
 const fault = document.getElementById("fault");
 const locationField = document.getElementById("location");
 
@@ -68,7 +75,7 @@ window.findCustomer = function(){
 faultForm.addEventListener("input", function(){
     const number = landline.value.trim();
 
-    if(customers[number] && fault.value && locationField.value){
+    if(customers[number] && mobile.value && fault.value && locationField.value){
         faultSubmit.classList.remove("hidden");
     } else {
         faultSubmit.classList.add("hidden");
@@ -80,23 +87,26 @@ faultForm.addEventListener("submit", async function(e){
 
     const number = landline.value.trim();
     const name = customers[number];
+    const mobileNumber = mobile.value.trim();
     const faultType = fault.value;
     const locationValue = locationField.value;
 
-    // ✅ Save to Firebase (for admin)
+    // ✅ Save to Firebase
     await addDoc(collection(db,"faults"),{
         landline:number,
         name:name,
+        mobile:mobileNumber,
         fault:faultType,
         location:locationValue,
         status:"pending",
         createdAt: serverTimestamp()
     });
 
-    // ✅ Send WhatsApp
+    // ✅ WhatsApp message
     let msg = `Fault Booking:%0A
 Landline: ${number}%0A
 Name: ${name}%0A
+Mobile: ${mobileNumber}%0A
 Fault: ${faultType}%0A
 Location: ${locationValue}`;
 
