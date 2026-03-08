@@ -1,21 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="style.css">
+<title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <header>
-    <h2>Admin Dashboard</h2>
+<h2>Admin Dashboard</h2>
 </header>
 
 <div class="admin-buttons">
-    <a href="pending.html" class="btn pending">Pending Faults</a>
-    <a href="resolved.html" class="btn resolved">Resolved Faults</a>
-    <a href="applications.html" class="btn applications">New Applications</a>
+
+<a href="pending.html" class="btn pending">
+Pending Faults (<span id="pendingCount">0</span>)
+</a>
+
+<a href="resolved.html" class="btn resolved">
+Resolved Faults (<span id="resolvedCount">0</span>)
+</a>
+
+<a href="applications.html" class="btn applications">
+New Applications (<span id="applicationCount">0</span>)
+</a>
+
 </div>
+
+<script type="module">
+
+import { db } from "./firebase-init.js";
+
+import {
+collection,
+getDocs
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+
+async function loadCounts(){
+
+const pendingSnapshot = await getDocs(collection(db,"faults"));
+const resolvedSnapshot = await getDocs(collection(db,"resolvedFaults"));
+const applicationSnapshot = await getDocs(collection(db,"applications"));
+
+document.getElementById("pendingCount").innerText = pendingSnapshot.size;
+document.getElementById("resolvedCount").innerText = resolvedSnapshot.size;
+document.getElementById("applicationCount").innerText = applicationSnapshot.size;
+
+}
+
+loadCounts();
+
+</script>
 
 </body>
 </html>
