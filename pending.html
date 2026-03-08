@@ -1,79 +1,102 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Pending Faults</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="style.css">
+<title>Pending Faults</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
-    <h1>Pending Faults</h1>
+<h1>Pending Faults</h1>
 </header>
 
 <div id="faultList" class="container"></div>
 
 <script type="module">
+
 import { db } from "./firebase-init.js";
+
 import {
-    collection,
-    getDocs,
-    doc,
-    updateDoc,
-    deleteDoc,
-    addDoc
+collection,
+getDocs,
+query,
+orderBy,
+doc,
+deleteDoc,
+addDoc
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const list = document.getElementById("faultList");
 
 async function loadFaults() {
-    list.innerHTML = "";
 
-    const snapshot = await getDocs(collection(db, "faults"));
+list.innerHTML = "";
 
-    snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const id = docSnap.id;
+const q = query(
+collection(db,"faults"),
+orderBy("createdAt","desc")
+);
 
-        const card = document.createElement("div");
-        card.className = "card";
+const snapshot = await getDocs(q);
 
-   const date = data.createdAt?.toDate().toLocaleString() || "-";
+snapshot.forEach((docSnap)=>{
 
-        card.innerHTML = `
-           <p><strong>Landline:</strong> ${data.landline}</p>
-           <p><strong>Name:</strong> ${data.name}</p>
-           <p><strong>Fault:</strong> ${data.fault}</p>
-           <p><strong>Location:</strong> ${data.location}</p>
-           <p><strong>Booked:</strong> ${date}</p>
-           <button class="btn">Resolve</button>
+const data = docSnap.data();
+const id = docSnap.id;
+
+const date = data.createdAt?.toDate().toLocaleString() || "-";
+
+const card = document.createElement("div");
+card.className = "card";
+
+card.innerHTML = `
+<p><strong>Landline:</strong> ${data.landline}</p>
+<p><strong>Name:</strong> ${data.name}</p>
+<p><strong>Fault:</strong> ${data.fault}</p>
+<p><strong>Location:</strong> ${data.location}</p>
+<p><strong>Booked:</strong> ${date}</p>
+<button class="btn" onclick="resolveFault('${id}')">Resolve</button>
 `;
-        list.appendChild(card);
-    });
+
+list.appendChild(card);
+
+});
+
 }
 
-window.resolveFault = async function(id) {
-    const reason = prompt("Enter Resolution Reason:");
-    if (!reason) return;
+window.resolveFault = async function(id){
 
-    const faultRef = doc(db, "faults", id);
-    const snapshot = await getDocs(collection(db, "faults"));
+const reason = prompt("Enter Resolution Reason:");
 
-    const singleDoc = snapshot.docs.find(d => d.id === id);
-    const data = singleDoc.data();
+if(!reason) return;
 
-    await addDoc(collection(db, "resolvedFaults"), {
-        ...data,
-        solution: reason
-    });
+const snapshot = await getDocs(collection(db,"faults"));
+const singleDoc = snapshot.docs.find(d => d.id === id);
 
-    await deleteDoc(faultRef);
+if(!singleDoc){
+alert("Fault not found");
+return;
+}
 
-    alert("Moved to Resolved");
-    loadFaults();
+const data = singleDoc.data();
+
+await addDoc(collection(db,"resolvedFaults"),{
+...data,
+solution:reason,
+resolvedAt:new Date()
+});
+
+await deleteDoc(doc(db,"faults",id));
+
+alert("Moved to Resolved");
+
+loadFaults();
+
 };
 
 loadFaults();
+
 </script>
 
 </body>
